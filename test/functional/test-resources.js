@@ -20,6 +20,7 @@ import {
   Resources,
   TaskQueue_,
 } from '../../src/service/resources-impl';
+import {VisibilityState} from '../../src/service/viewer-impl';
 import {layoutRectLtwh} from '../../src/layout-rect';
 import * as sinon from 'sinon';
 
@@ -125,6 +126,11 @@ describe('Resources', () => {
     expect(resources.calcTaskTimeout_(task_p0)).to.equal(0);
     expect(resources.calcTaskTimeout_(task_p1)).to.equal(0);
 
+    // Idle render penalty after first visible
+    resources.firstVisibleTime_ = 0;
+    expect(resources.calcTaskTimeout_(task_p0)).to.equal(0);
+    expect(resources.calcTaskTimeout_(task_p1)).to.equal(1000);
+
     // Hight priority task in pool
     resources.exec_.tasks_ = [task_p0];
     expect(resources.calcTaskTimeout_(task_p0)).to.equal(0);
@@ -159,6 +165,9 @@ describe('Resources', () => {
       startLayout: () => {},
     };
     resources.visible_ = false;
+    sandbox.stub(resources.viewer_, 'getVisibilityState').returns(
+      VisibilityState.PRERENDER
+    );
     resources.scheduleLayoutOrPreload_(resource, true);
     expect(resources.queue_.getSize()).to.equal(0);
   });
@@ -176,6 +185,9 @@ describe('Resources', () => {
       layoutScheduled: () => {},
     };
     resources.visible_ = false;
+    sandbox.stub(resources.viewer_, 'getVisibilityState').returns(
+      VisibilityState.PRERENDER
+    );
     resources.scheduleLayoutOrPreload_(resource, true);
     expect(resources.queue_.getSize()).to.equal(1);
   });
@@ -211,7 +223,6 @@ describe('Resources', () => {
   });
 });
 
-
 describe('Resources schedulePause', () => {
 
   let sandbox;
@@ -242,7 +253,12 @@ describe('Resources schedulePause', () => {
           return true;
         },
       },
-      documentInactiveCallback() {
+      pauseCallback() {
+      },
+      unlayoutCallback() {
+        return false;
+      },
+      unlayoutOnPause() {
         return false;
       },
     };
@@ -289,14 +305,25 @@ describe('Resources schedulePause', () => {
     }).to.not.throw();
   });
 
-  it('should call documentInactiveCallback on custom element', () => {
-    const stub1 = sandbox.stub(child1, 'documentInactiveCallback');
-    const stub2 = sandbox.stub(child2, 'documentInactiveCallback');
+  it('should call pauseCallback on custom element', () => {
+    const stub1 = sandbox.stub(child1, 'pauseCallback');
+    const stub2 = sandbox.stub(child2, 'pauseCallback');
 
     resources.schedulePause(parent, children);
     expect(stub1.calledOnce).to.be.true;
     expect(stub2.calledOnce).to.be.true;
   });
+
+  it('should call unlayoutCallback when unlayoutOnPause', () => {
+    const stub1 = sandbox.stub(child1, 'unlayoutCallback');
+    const stub2 = sandbox.stub(child2, 'unlayoutCallback');
+    sandbox.stub(child1, 'unlayoutOnPause').returns(true);
+
+    resources.schedulePause(parent, children);
+    expect(stub1.calledOnce).to.be.true;
+    expect(stub2.calledOnce).to.be.false;
+  });
+
 });
 
 
@@ -357,6 +384,9 @@ describe('Resources discoverWork', () => {
 
   it('should render two screens when visible', () => {
     resources.visible_ = true;
+    sandbox.stub(resources.viewer_, 'getVisibilityState').returns(
+      VisibilityState.VISIBLE
+    );
     viewportMock.expects('getRect').returns(
         layoutRectLtwh(0, 0, 300, 400)).once();
 
@@ -371,6 +401,9 @@ describe('Resources discoverWork', () => {
     resource1.state_ = ResourceState_.LAYOUT_COMPLETE;
     resource2.state_ = ResourceState_.LAYOUT_COMPLETE;
     resources.visible_ = true;
+    sandbox.stub(resources.viewer_, 'getVisibilityState').returns(
+      VisibilityState.VISIBLE
+    );
     viewportMock.expects('getRect').returns(
         layoutRectLtwh(0, 0, 300, 400)).once();
 
@@ -387,6 +420,9 @@ describe('Resources discoverWork', () => {
     resource2.element.getBoundingClientRect =
         () => layoutRectLtwh(10, 1010, 100, 101);
     resources.visible_ = true;
+    sandbox.stub(resources.viewer_, 'getVisibilityState').returns(
+      VisibilityState.VISIBLE
+    );
     resources.relayoutAll_ = false;
     resources.relayoutTop_ = 1000;
     viewportMock.expects('getRect').returns(
@@ -403,6 +439,9 @@ describe('Resources discoverWork', () => {
 
   it('should prerender only one screen with prerenderSize = 1', () => {
     resources.visible_ = false;
+    sandbox.stub(resources.viewer_, 'getVisibilityState').returns(
+      VisibilityState.PRERENDER
+    );
     resources.prerenderSize_ = 1;
     viewportMock.expects('getRect').returns(
         layoutRectLtwh(0, 0, 300, 1009)).once();
@@ -415,6 +454,9 @@ describe('Resources discoverWork', () => {
 
   it('should NOT prerender anything with prerenderSize = 0', () => {
     resources.visible_ = false;
+    sandbox.stub(resources.viewer_, 'getVisibilityState').returns(
+      VisibilityState.PRERENDER
+    );
     resources.prerenderSize_ = 0;
     viewportMock.expects('getRect').returns(
         layoutRectLtwh(0, 0, 300, 400)).once();
@@ -428,6 +470,9 @@ describe('Resources discoverWork', () => {
     resource1.state_ = ResourceState_.LAYOUT_COMPLETE;
     resource2.state_ = ResourceState_.LAYOUT_COMPLETE;
     resources.visible_ = true;
+    sandbox.stub(resources.viewer_, 'getVisibilityState').returns(
+      VisibilityState.VISIBLE
+    );
     viewportMock.expects('getRect').returns(
         layoutRectLtwh(0, 0, 300, 400)).atLeast(1);
 
@@ -646,6 +691,9 @@ describe('Resources changeSize', () => {
 
     it('should change size when document is invisible', () => {
       resources.visible_ = false;
+      sandbox.stub(resources.viewer_, 'getVisibilityState').returns(
+        VisibilityState.PRERENDER
+      );
       resources.scheduleChangeSize_(resource1, 111, 222, false);
       resources.mutateWork_();
       expect(resources.requestsChangeSize_.length).to.equal(0);
@@ -1050,7 +1098,10 @@ describe('Resources.Resource', () => {
       isRelayoutNeeded: () => false,
       layoutCallback: () => {},
       changeSize: () => {},
-      documentInactiveCallback: () => false,
+      unlayoutOnPause: () => false,
+      unlayoutCallback: () => true,
+      pauseCallback: () => false,
+      resumeCallback: () => false,
       viewportCallback: () => {},
     };
     elementMock = sandbox.mock(element);
@@ -1469,41 +1520,41 @@ describe('Resources.Resource', () => {
   });
 
 
-  describe('documentInactiveCallback', () => {
-    it('should NOT call documentInactiveCallback on unbuilt element', () => {
+  describe('unlayoutCallback', () => {
+    it('should NOT call unlayoutCallback on unbuilt element', () => {
       resource.state_ = ResourceState_.NOT_BUILT;
       elementMock.expects('viewportCallback').never();
-      elementMock.expects('documentInactiveCallback').never();
-      resource.documentBecameInactive();
+      elementMock.expects('unlayoutCallback').never();
+      resource.unlayout();
       expect(resource.getState()).to.equal(ResourceState_.NOT_BUILT);
     });
 
-    it('should call documentInactiveCallback on built element and update state',
+    it('should call unlayoutCallback on built element and update state',
         () => {
           resource.state_ = ResourceState_.LAYOUT_COMPLETE;
-          elementMock.expects('documentInactiveCallback').returns(true).once();
-          resource.documentBecameInactive();
+          elementMock.expects('unlayoutCallback').returns(true).once();
+          resource.unlayout();
           expect(resource.getState()).to.equal(ResourceState_.NOT_LAID_OUT);
         });
 
     it('updated state should bypass isRelayoutNeeded', () => {
       resource.state_ = ResourceState_.LAYOUT_COMPLETE;
-      elementMock.expects('documentInactiveCallback').returns(true).once();
+      elementMock.expects('unlayoutCallback').returns(true).once();
       elementMock.expects('isUpgraded').returns(true).atLeast(1);
       elementMock.expects('getBoundingClientRect')
           .returns({left: 1, top: 1, width: 1, height: 1}).once();
 
-      resource.documentBecameInactive();
+      resource.unlayout();
 
       elementMock.expects('layoutCallback').returns(Promise.resolve()).once();
       resource.startLayout(true);
     });
 
-    it('should call documentInactiveCallback on built element' +
+    it('should call unlayoutCallback on built element' +
         ' but NOT update state', () => {
       resource.state_ = ResourceState_.LAYOUT_COMPLETE;
-      elementMock.expects('documentInactiveCallback').returns(false).once();
-      resource.documentBecameInactive();
+      elementMock.expects('unlayoutCallback').returns(false).once();
+      resource.unlayout();
       expect(resource.getState()).to.equal(ResourceState_.LAYOUT_COMPLETE);
     });
 
@@ -1511,21 +1562,92 @@ describe('Resources.Resource', () => {
       resource.state_ = ResourceState_.LAYOUT_COMPLETE;
       resource.isInViewport_ = false;
       elementMock.expects('viewportCallback').never();
-      resource.documentBecameInactive();
+      resource.unlayout();
     });
 
     it('should call viewportCallback when resource in viewport', () => {
       resource.state_ = ResourceState_.LAYOUT_COMPLETE;
       resource.isInViewport_ = true;
       elementMock.expects('viewportCallback').withExactArgs(false).once();
-      resource.documentBecameInactive();
+      resource.unlayout();
     });
 
-    it('should delegate unload to documentInactiveCallback', () => {
+    it('should delegate unload to unlayoutCallback', () => {
       resource.state_ = ResourceState_.LAYOUT_COMPLETE;
-      elementMock.expects('documentInactiveCallback').returns(false).once();
+      elementMock.expects('unlayoutCallback').returns(false).once();
       resource.unload();
       expect(resource.getState()).to.equal(ResourceState_.LAYOUT_COMPLETE);
+    });
+  });
+
+  describe('pauseCallback', () => {
+    it('should NOT call pauseCallback on unbuilt element', () => {
+      resource.state_ = ResourceState_.NOT_BUILT;
+      elementMock.expects('pauseCallback').never();
+      resource.pause();
+    });
+
+    it('should NOT call pauseCallback on paused element', () => {
+      resource.state_ = ResourceState_.LAYOUT_COMPLETE;
+      resource.paused_ = true;
+      elementMock.expects('pauseCallback').never();
+      resource.pause();
+    });
+
+    it('should call pauseCallback on built element', () => {
+      resource.state_ = ResourceState_.LAYOUT_COMPLETE;
+      elementMock.expects('pauseCallback').once();
+      resource.pause();
+    });
+
+    it('should NOT call unlayoutCallback', () => {
+      resource.state_ = ResourceState_.LAYOUT_COMPLETE;
+      elementMock.expects('pauseCallback').once();
+      elementMock.expects('unlayoutCallback').never();
+      resource.pause();
+    });
+
+    describe('when unlayoutOnPause', () => {
+      beforeEach(() => {
+        elementMock.expects('unlayoutOnPause').returns(true).once();
+      });
+
+      it('should call unlayoutCallback and update state', () => {
+        resource.state_ = ResourceState_.LAYOUT_COMPLETE;
+        elementMock.expects('pauseCallback').once();
+        elementMock.expects('unlayoutCallback').returns(true).once();
+        resource.pause();
+        expect(resource.getState()).to.equal(ResourceState_.NOT_LAID_OUT);
+      });
+
+      it('should call unlayoutCallback but NOT update state', () => {
+        resource.state_ = ResourceState_.LAYOUT_COMPLETE;
+        elementMock.expects('pauseCallback').once();
+        elementMock.expects('unlayoutCallback').returns(false).once();
+        resource.pause();
+        expect(resource.getState()).to.equal(ResourceState_.LAYOUT_COMPLETE);
+      });
+    });
+  });
+
+  describe('resumeCallback', () => {
+    it('should NOT call resumeCallback on unbuilt element', () => {
+      resource.state_ = ResourceState_.NOT_BUILT;
+      elementMock.expects('resumeCallback').never();
+      resource.resume();
+    });
+
+    it('should NOT call resumeCallback on un-paused element', () => {
+      resource.state_ = ResourceState_.LAYOUT_COMPLETE;
+      elementMock.expects('resumeCallback').never();
+      resource.resume();
+    });
+
+    it('should call resumeCallback on built element', () => {
+      resource.state_ = ResourceState_.LAYOUT_COMPLETE;
+      resource.paused_ = true;
+      elementMock.expects('resumeCallback').once();
+      resource.resume();
     });
   });
 
