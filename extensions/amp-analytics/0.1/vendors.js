@@ -238,6 +238,23 @@ export const ANALYTICS_CONFIG = {
     },
   },
 
+  'lotame': {
+    'requests': {
+      'pageview': 'https://bcp.crwdcntrl.net/5/c=${account}/pv=y'
+    },
+    'triggers': {
+      'track pageview': {
+        'on': 'visible',
+        'request': 'pageview'
+      }
+    },
+    'transport': {
+      'beacon': false,
+      'xhrpost': false,
+      'image': true
+    }
+  },
+
   'mediametrie': {
     'requests': {
       'host': 'https://prof.estat.com/m/web',
