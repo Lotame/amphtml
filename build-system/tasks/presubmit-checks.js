@@ -55,9 +55,10 @@ var forbiddenTerms = {
       'whitelist a legit case.',
     // TODO: temporary, remove when validator is up to date
     whitelist: [
-      'validator/validator.js',
+      'validator/index.js',  // NodeJs only.
       'validator/parse-css.js',
       'validator/validator-in-browser.js',
+      'validator/validator.js',
     ]
   },
   'iframePing': {
@@ -154,7 +155,7 @@ var forbiddenTerms = {
   'cidFor': {
     message: requiresReviewPrivacy,
     whitelist: [
-      'builtins/amp-ad.js',
+      'src/ad-cid.js',
       'src/cid.js',
       'src/service/cid-impl.js',
       'src/url-replacements.js',
@@ -261,8 +262,9 @@ var forbiddenTerms = {
   '\\.startsWith': {
     message: es6polyfill,
     whitelist: [
+      'validator/index.js',  // NodeJs only.
       'validator/tokenize-css.js',
-      'validator/validator.js'
+      'validator/validator.js',
     ]
   },
   '\\.endsWith': {
@@ -300,6 +302,17 @@ var forbiddenTerms = {
     message: 'Use dom.documentContains API.',
     whitelist: [
       'src/dom.js',
+    ],
+  },
+  '\\sdocument(?![a-zA-Z0-9_])': {
+    message: 'Use `window.document` or similar to access document, the global' +
+      '`document` is forbidden',
+    whitelist: [
+      'validator/validator.js',
+      'testing/iframe.js',
+      'testing/screenshots/make-screenshot.js',
+      'tools/experiments/experiments.js',
+      'examples/viewer-integr.js',
     ],
   },
   'getUnconfirmedReferrerUrl': {
@@ -417,6 +430,15 @@ function isInTestFolder(path) {
   return path.startsWith('test/') || folder == 'test';
 }
 
+function stripComments(contents) {
+  // Multi-line comments
+  contents = contents.replace(/\/\*(?!.*\*\/)(.|\n)*?\*\//g, '');
+  // Single line comments with only leading whitespace
+  contents = contents.replace(/\n\s*\/\/.*/g, '');
+  // Single line comments following a space, semi-colon, or closing brace
+  return contents.replace(/( |\}|;)\s*\/\/.*/g, '$1');
+}
+
 /**
  * Logs any issues found in the contents of file based on terms (regex
  * patterns), and provides any possible fix information for matched terms if
@@ -430,7 +452,7 @@ function isInTestFolder(path) {
  */
 function matchTerms(file, terms) {
   var pathname = file.path;
-  var contents = file.contents.toString();
+  var contents = stripComments(file.contents.toString());
   var relative = file.relative;
   return Object.keys(terms).map(function(term) {
     var fix;

@@ -69,8 +69,9 @@ describe('amp-iframe', () => {
       if (opt_height) {
         iframe.iframe.style.height = opt_height;
       }
-      viewportFor(iframe.win).resize_();
       const top = opt_top || '600px';
+      const viewport = viewportFor(iframe.win);
+      viewport.resize_();
       i.style.position = 'absolute';
       i.style.top = top;
       if (opt_translateY) {
@@ -89,6 +90,7 @@ describe('amp-iframe', () => {
         i.appendChild(img);
       }
       iframe.doc.body.appendChild(i);
+      viewport.setScrollTop(parseInt(top, 10));
       if (opt_onAppend) {
         opt_onAppend(iframe.doc);
       }
@@ -136,7 +138,6 @@ describe('amp-iframe', () => {
       height: 100,
     }).then(amp => {
       const impl = amp.container.implementation_;
-      expect(amp.iframe).to.be.instanceof(Element);
       expect(amp.iframe.src).to.equal(iframeSrc);
       expect(amp.iframe.getAttribute('sandbox')).to.equal('');
       expect(amp.iframe.parentNode).to.equal(amp.scrollWrapper);
@@ -218,7 +219,6 @@ describe('amp-iframe', () => {
       width: 100,
       height: 100,
     }).then(amp => {
-      expect(amp.iframe).to.be.instanceof(Element);
       expect(amp.iframe.src).to.equal(dataUri);
       expect(amp.iframe.getAttribute('sandbox')).to.equal('');
       expect(amp.iframe.parentNode).to.equal(amp.scrollWrapper);
@@ -237,7 +237,6 @@ describe('amp-iframe', () => {
           'parent.parent./*OK*/postMessage(\'loaded-iframe\', \'*\');}' +
           '</script>',
     }).then(amp => {
-      expect(amp.iframe).to.be.instanceof(Element);
       expect(amp.iframe.src).to.match(
           /^data\:text\/html;charset=utf-8;base64,/);
       expect(amp.iframe.getAttribute('srcdoc')).to.be.null;

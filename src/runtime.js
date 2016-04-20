@@ -16,7 +16,6 @@
 
 import {BaseElement} from './base-element';
 import {BaseTemplate, registerExtendedTemplate} from './template';
-import {assert} from './asserts';
 import {dev} from './log';
 import {getMode} from './mode';
 import {getService} from './service';
@@ -98,9 +97,6 @@ export function adopt(global) {
   global.AMP.registerTemplate = function(name, implementationClass) {
     registerExtendedTemplate(global, name, implementationClass);
   };
-
-  /** @const */
-  global.AMP.assert = assert;
 
   installCoreServices(global);
   const viewer = viewerFor(global);

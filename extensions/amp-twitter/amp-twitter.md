@@ -67,7 +67,7 @@ Options for the Tweet appearance can be set using `data-` attributes. E.g. `data
 ## Validation errors
 
 The following lists validation errors specific to the `amp-twitter` tag
-(see also `amp-twitter` in the [AMP validator specification](https://github.com/ampproject/amphtml/blob/master/validator/validator.protoascii)):
+(see also `amp-twitter` in the [AMP validator specification](https://github.com/ampproject/amphtml/blob/master/extensions/amp-twitter/0.1/validator-amp-twitter.protoascii)):
 
 <!---
 What does fixed height and fixed width mean for audio layout?
@@ -89,7 +89,7 @@ May need to add something to this table based on technical review.
   </tr>
   <tr>
     <td width="40%"><a href="https://www.ampproject.org/docs/reference/validation_errors.html#missing-url">Missing URL for attribute 'example1' in tag 'example2'.</a></td>
-    <td>Error thrown when <code>data-tweetid</code> or <code>src</code> is missing it's URL.</td>
+    <td>Error thrown when <code>data-tweetid</code> or <code>src</code> is missing its URL.</td>
   </tr>
   <tr>
     <td width="40%"><a href="https://www.ampproject.org/docs/reference/validation_errors.html#invalid-url">Malformed URL 'example3' for attribute 'example1' in tag 'example2'.</a></td>

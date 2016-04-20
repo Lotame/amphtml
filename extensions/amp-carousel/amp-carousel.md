@@ -64,7 +64,7 @@ unless only a single child is present.
 **type**
 - `carousel` (default) - All slides are shown and are scrollable horizontally.
   Be aware that `type=carousel` does not currently support `layout=responsive`.
-- `slides` - Shows a single slide at a time.
+- `slides` - Shows a single slide at a time. Supports `layout=responsive`.
 
 **loop** (type=slides only)
 
@@ -119,7 +119,7 @@ You may override this with your own svg or image like so:
 ## Validation errors
 
 The following lists validation errors specific to the `amp-carousel` tag
-(see also `amp-carousel` in the [AMP validator specification](https://github.com/ampproject/amphtml/blob/master/validator/validator.protoascii)):
+(see also `amp-carousel` in the [AMP validator specification](https://github.com/ampproject/amphtml/blob/master/extensions/amp-carousel/0.1/validator-amp-carousel.protoascii)):
 
 <table>
   <tr>

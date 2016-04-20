@@ -19,10 +19,13 @@ import {getLengthNumeral} from '../src/layout';
 import {getService} from './service';
 import {documentInfoFor} from './document-info';
 import {getMode} from './mode';
+import {getIntersectionChangeEntry} from './intersection-observer';
 import {preconnectFor} from './preconnect';
 import {dashToCamelCase} from './string';
 import {parseUrl, assertHttpsUrl} from './url';
+import {timer} from './timer';
 import {user} from './log';
+import {viewportFor} from './viewport';
 import {viewerFor} from './viewer';
 
 
@@ -42,6 +45,7 @@ const count = {};
  *     - A _context object for internal use.
  */
 function getFrameAttributes(parentWindow, element, opt_type) {
+  const startTime = timer.now();
   const width = element.getAttribute('width');
   const height = element.getAttribute('height');
   const type = opt_type || element.getAttribute('type');
@@ -51,9 +55,6 @@ function getFrameAttributes(parentWindow, element, opt_type) {
   addDataAndJsonAttributes_(element, attributes);
   attributes.width = getLengthNumeral(width);
   attributes.height = getLengthNumeral(height);
-  const box = element.getLayoutBox();
-  attributes.initialWindowWidth = box.width;
-  attributes.initialWindowHeight = box.height;
   attributes.type = type;
   const docInfo = documentInfoFor(parentWindow);
   const viewer = viewerFor(parentWindow);
@@ -75,6 +76,11 @@ function getFrameAttributes(parentWindow, element, opt_type) {
     tagName: element.tagName,
     mode: getMode(),
     hidden: !viewer.isVisible(),
+    initialIntersection: getIntersectionChangeEntry(
+        timer.now(),
+        viewportFor(parentWindow).getRect(),
+        element.getLayoutBox()),
+    startTime: startTime,
   };
   const adSrc = element.getAttribute('src');
   if (adSrc) {
@@ -93,7 +99,7 @@ function getFrameAttributes(parentWindow, element, opt_type) {
  */
 export function getIframe(parentWindow, element, opt_type) {
   const attributes = getFrameAttributes(parentWindow, element, opt_type);
-  const iframe = document.createElement('iframe');
+  const iframe = parentWindow.document.createElement('iframe');
   if (!count[attributes.type]) {
     count[attributes.type] = 0;
   }
@@ -241,9 +247,9 @@ function getCustomBootstrapBaseUrl(parentWindow, opt_strictForUnitTest) {
   const parsed = parseUrl(url);
   user.assert((parsed.hostname == 'localhost' && !opt_strictForUnitTest) ||
       parsed.origin != parseUrl(parentWindow.location.href).origin,
-      '3p iframe url must not be on the same origin as the current document ' +
-      '%s (%s) in element %s. See https://github.com/ampproject/amphtml/blob/' +
-      'master/spec/amp-iframe-origin-policy.md for details.', url,
+      '3p iframe url must not be on the same origin as the current doc' +
+      'ument %s (%s) in element %s. See https://github.com/ampproject/amphtml' +
+      '/blob/master/spec/amp-iframe-origin-policy.md for details.', url,
       parseUrl(url).origin, meta);
   return url + '?$internalRuntimeVersion$';
 }

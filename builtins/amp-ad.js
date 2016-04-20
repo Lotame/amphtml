@@ -16,17 +16,16 @@
 
 import {BaseElement} from '../src/base-element';
 import {IntersectionObserver} from '../src/intersection-observer';
-import {cidForOrNull} from '../src/cid';
+import {getAdCid} from '../src/ad-cid';
 import {getIframe, prefetchBootstrap} from '../src/3p-frame';
 import {isLayoutSizeDefined} from '../src/layout';
 import {listen, listenOnce, postMessage} from '../src/iframe-helper';
 import {loadPromise} from '../src/event-helper';
 import {parseUrl} from '../src/url';
 import {registerElement} from '../src/custom-element';
-import {adPrefetch, adPreconnect, clientIdScope} from '../ads/_config';
+import {adPrefetch, adPreconnect} from '../ads/_config';
 import {timer} from '../src/timer';
 import {user} from '../src/log';
-import {userNotificationManagerFor} from '../src/user-notification';
 import {viewerFor} from '../src/viewer';
 
 
@@ -60,6 +59,8 @@ export function installAd(win) {
 
       // Ad opts into lazier loading strategy where we only load ads that are
       // at closer than 1.25 viewports away.
+      // TODO(jridgewell): Can this be moved to the new number based
+      // renderOutsideViewport?
       if (this.element.getAttribute('data-loading-strategy') ==
           'prefer-viewability-over-views') {
         const box = this.getIntersectionElementLayoutBox();
@@ -72,7 +73,7 @@ export function installAd(win) {
       }
 
       // Otherwise the ad is good to go.
-      return true;
+      return super.renderOutsideViewport();
     }
 
     /** @override */
@@ -232,7 +233,7 @@ export function installAd(win) {
           // now.
           loadingAdsCount--;
         }, 1000);
-        return this.getAdCid_().then(cid => {
+        return getAdCid(this).then(cid => {
           if (cid) {
             this.element.setAttribute('ampcid', cid);
           }
@@ -240,7 +241,6 @@ export function installAd(win) {
             this.element);
           this.iframe_.setAttribute('scrolling', 'no');
           this.applyFillContent(this.iframe_);
-          this.element.appendChild(this.iframe_);
           this.intersectionObserver_ =
               new IntersectionObserver(this, this.iframe_, /* opt_is3P */true);
           // Triggered by context.noContentAvailable() inside the ad iframe.
@@ -278,40 +278,11 @@ export function installAd(win) {
           this.viewer_.onVisibilityChanged(() => {
             this.sendEmbedInfo_(this.isInViewport());
           });
+          this.element.appendChild(this.iframe_);
           return loadPromise(this.iframe_);
         });
       }
       return loadPromise(this.iframe_);
-    }
-
-    /**
-     * @return {!Promise<string|undefined>} A promise for a CID or undefined if
-     *     - the ad network does not request one or
-     *     - `amp-analytics` which provides the CID service was not installed.
-     * @private
-     */
-    getAdCid_() {
-      const scope = clientIdScope[this.element.getAttribute('type')];
-      const consentId = this.element.getAttribute(
-          'data-consent-notification-id');
-      if (!(scope || consentId)) {
-        return Promise.resolve();
-      }
-      return cidForOrNull(this.getWin()).then(cidService => {
-        if (!cidService) {
-          return;
-        }
-        let consent = Promise.resolve();
-        if (consentId) {
-          consent = userNotificationManagerFor(this.getWin()).then(service => {
-            return service.get(consentId);
-          });
-          if (!scope && consentId) {
-            return consent;
-          }
-        }
-        return cidService.get(scope, consent);
-      });
     }
 
     /** @override  */

@@ -41,7 +41,7 @@ export class AmpCarousel extends BaseCarousel {
     this.cells_ = this.getRealChildren();
 
     /** @private {!Element} */
-    this.container_ = document.createElement('div');
+    this.container_ = this.element.ownerDocument.createElement('div');
     st.setStyles(this.container_, {
       whiteSpace: 'nowrap',
       position: 'absolute',
@@ -107,9 +107,9 @@ export class AmpCarousel extends BaseCarousel {
     st.setStyles(this.container_, {
       transform: st.translateX(-newPos),
     });
+    this.updateInViewport_(newPos, oldPos);
     this.doLayout_(newPos);
     this.preloadNext_(newPos, Math.sign(newPos - oldPos));
-    this.updateInViewport_(newPos, oldPos);
     this.setControlsState();
   }
 

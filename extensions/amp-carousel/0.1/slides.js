@@ -23,6 +23,7 @@ import {SwipeXRecognizer} from '../../../src/gesture-recognizers';
 import {bezierCurve} from '../../../src/curve';
 import {isLayoutSizeDefined} from '../../../src/layout';
 import {timer} from '../../../src/timer';
+import {user} from '../../../src/log';
 
 
 export class AmpSlides extends BaseCarousel {
@@ -48,7 +49,7 @@ export class AmpSlides extends BaseCarousel {
     this.slides_.forEach((slide, i) => {
       this.setAsOwner(slide);
       // Only the first element is initially visible.
-      slide.style.display = i > 0 ? 'none' : 'block';
+      slide.style.visibility = i > 0 ? 'hidden' : 'visible';
       this.applyFillContent(slide);
     });
 
@@ -58,7 +59,7 @@ export class AmpSlides extends BaseCarousel {
     /** @private {?number} */
     this.autoplayTimeoutId_ = null;
 
-    AMP.assert(this.slides_.length >= 1,
+    user.assert(this.slides_.length >= 1,
         'amp-carousel with type=slides should have at least 1 slide.');
 
     this.setupAutoplay_();
@@ -176,7 +177,7 @@ export class AmpSlides extends BaseCarousel {
     st.setStyles(slide, {
       transform: st.translateX(dir * containerWidth),
       zIndex: 1,
-      display: 'block',
+      visibility: 'visible',
     });
 
     this.scheduleLayout(slide);
@@ -196,7 +197,7 @@ export class AmpSlides extends BaseCarousel {
       });
     } else {
       st.setStyles(slide, {
-        display: 'none',
+        visibility: 'hidden',
         zIndex: 0,
         transform: '',
         opacity: 1,
@@ -231,20 +232,20 @@ export class AmpSlides extends BaseCarousel {
    */
   commitSwitch_(oldSlide, newSlide) {
     st.setStyles(oldSlide, {
-      display: 'none',
+      visibility: 'hidden',
       zIndex: 0,
       transform: '',
       opacity: 1,
     });
     st.setStyles(newSlide, {
-      display: 'block',
+      visibility: 'visible',
       zIndex: 0,
       transform: '',
       opacity: 1,
     });
-    this.scheduleLayout(newSlide);
     this.updateInViewport(oldSlide, false);
     this.updateInViewport(newSlide, true);
+    this.scheduleLayout(newSlide);
     this.setControlsState();
     this.schedulePause(oldSlide);
   }

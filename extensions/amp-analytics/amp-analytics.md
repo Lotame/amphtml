@@ -95,6 +95,12 @@ Type attribute value: `atinternet`
 
 Adds support for AT Internet. More details for adding AT Internet support can be found at [developers.atinternet-solutions.com](http://developers.atinternet-solutions.com/javascript-en/advanced-features-javascript-en/accelerated-mobile-pages-amp-javascript-en/).
 
+### Burt
+
+Type attribute value: `burt`
+
+Adds support for Burt. Additionally, the `trackingKey` variable must be specified. It's also possible to specify the optional variables `category` and `subCategory`.
+
 ### Chartbeat
 
 Type attribute value: `chartbeat`
@@ -309,7 +315,8 @@ Use this configuration to fire a request under certain conditions when the page 
         "scrollSpec": {
           "verticalBoundaries": [25, 50, 90],
           "horizontalBoundaries": [90]
-        }
+        },
+        "request": "event"
       }
     }
     ```
@@ -381,7 +388,7 @@ The `extraUrlParamsReplaceMap` attribute specifies a map of keys and values that
 ## Validation errors
 
 The following lists validation errors specific to the `amp-analytics` tag
-(see also `amp-analytics` in the [AMP validator specification](https://github.com/ampproject/amphtml/blob/master/validator/validator.protoascii)):
+(see also `amp-analytics` in the [AMP validator specification](https://github.com/ampproject/amphtml/blob/master/extensions/amp-analytics/0.1/validator-amp-analytics.protoascii)):
 
 <table>
   <tr>

@@ -57,7 +57,7 @@ E.g. in https://www.youtube.com/watch?v=Z1q71gFeRqM Z1q71gFeRqM is the video id.
 ## Validation errors
 
 The following lists validation errors specific to the `amp-youtube` tag
-(see also `amp-youtube` in the [AMP validator specification](https://github.com/ampproject/amphtml/blob/master/validator/validator.protoascii)):
+(see also `amp-youtube` in the [AMP validator specification](https://github.com/ampproject/amphtml/blob/master/extensions/amp-youtube/0.1/validator-amp-youtube.protoascii)):
 
 <table>
   <tr>
@@ -74,7 +74,7 @@ The following lists validation errors specific to the `amp-youtube` tag
   </tr>
     <tr>
     <td width="40%"><a href="https://www.ampproject.org/docs/reference/validation_errors.html#missing-url">Missing URL for attribute 'example1' in tag 'example2'.</a></td>
-    <td>Error thrown when <code>data-videoid</code> or <code>src</code> is missing it's URL.</td>
+    <td>Error thrown when <code>data-videoid</code> or <code>src</code> is missing its URL.</td>
   </tr>
   <tr>
     <td width="40%"><a href="https://www.ampproject.org/docs/reference/validation_errors.html#invalid-url">Malformed URL 'example3' for attribute 'example1' in tag 'example2'.</a></td>

@@ -14,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the license.
 #
-
 """A build script which (thus far) works on Ubuntu 14."""
 
+import glob
 import logging
 import os
 import platform
@@ -59,10 +59,10 @@ def CheckPrereqs():
         'Please feel free to edit the source and fix it to your needs.')
 
   # Ensure source files are available.
-  for f in ['validator.protoascii', 'validator.proto', 'validator_gen_js.py',
-            'package.json', 'validator.js', 'validator_test.js',
-            'validator-in-browser.js', 'tokenize-css.js', 'parse-css.js',
-            'parse-srcset.js']:
+  for f in ['validator-main.protoascii', 'validator.proto',
+            'validator_gen_js.py', 'package.json', 'validator.js',
+            'validator_test.js', 'validator-in-browser.js', 'tokenize-css.js',
+            'parse-css.js', 'parse-srcset.js']:
     if not os.path.exists(f):
       Die('%s not found. Must run in amp_validator source directory.' % f)
 
@@ -139,9 +139,34 @@ def GenValidatorPb2Py(out_dir):
   logging.info('entering ...')
   assert re.match(r'^[a-zA-Z_\-0-9]+$', out_dir), 'bad out_dir: %s' % out_dir
 
-  subprocess.check_call(['protoc', 'validator.proto',
-                         '--python_out=%s' % out_dir])
+  subprocess.check_call(['protoc', 'validator.proto', '--python_out=%s' %
+                         out_dir])
   open('%s/__init__.py' % out_dir, 'w').close()
+  logging.info('... done')
+
+
+def GenValidatorProtoascii(out_dir):
+  """Assembles the validator protoascii file from the main and extensions.
+
+  Args:
+    out_dir: directory name of the output directory. Must not have slashes,
+      dots, etc.
+  """
+  logging.info('entering ...')
+  assert re.match(r'^[a-zA-Z_\-0-9]+$', out_dir), 'bad out_dir: %s' % out_dir
+
+  protoascii_segments = [open('validator-main.protoascii').read()]
+  extensions = glob.glob('extensions/*/0.1/validator-*.protoascii')
+  # In the Github project, the extensions are located in a sibling directory
+  # to the validator rather than a child directory.
+  if not extensions:
+    extensions = glob.glob('../extensions/*/0.1/validator-*.protoascii')
+  extensions.sort()
+  for extension in extensions:
+    protoascii_segments.append(open(extension).read())
+  f = open('%s/validator.protoascii' % out_dir, 'w')
+  f.write(''.join(protoascii_segments))
+  f.close()
   logging.info('... done')
 
 
@@ -164,7 +189,7 @@ def GenValidatorGeneratedJs(out_dir):
   import validator_gen_js
   out = []
   validator_gen_js.GenerateValidatorGeneratedJs(
-      specfile='validator.protoascii',
+      specfile='%s/validator.protoascii' % out_dir,
       validator_pb2=validator_pb2,
       text_format=text_format,
       descriptor=descriptor,
@@ -194,7 +219,7 @@ def GenValidatorGeneratedMd(out_dir):
   import validator_gen_md
   out = []
   validator_gen_md.GenerateValidatorGeneratedMd(
-      specfile='validator.protoascii',
+      specfile='%s/validator.protoascii' % out_dir,
       validator_pb2=validator_pb2,
       text_format=text_format,
       out=out)
@@ -216,8 +241,7 @@ def CompileWithClosure(js_files, closure_entry_points, output_file):
 
   cmd = ['java', '-jar', 'node_modules/google-closure-compiler/compiler.jar',
          '--language_in=ECMASCRIPT6_STRICT', '--language_out=ES5_STRICT',
-         '--js_output_file=%s' % output_file,
-         '--only_closure_dependencies']
+         '--js_output_file=%s' % output_file, '--only_closure_dependencies']
   cmd += ['--closure_entry_point=%s' % e for e in closure_entry_points]
   cmd += ['node_modules/google-closure-library/closure/**.js',
           '!node_modules/google-closure-library/closure/**_test.js',
@@ -245,95 +269,6 @@ def CompileValidatorMinified(out_dir):
   logging.info('... done')
 
 
-def GenerateValidateBin(out_dir, nodejs_cmd):
-  """Generates the validator binary, a Node.js script.
-
-  Args:
-    out_dir: output directory
-    nodejs_cmd: the command for calling Node.js
-  """
-  logging.info('entering ...')
-  f = open('%s/validate' % out_dir, 'w')
-  f.write('#!/usr/bin/env %s\n' % nodejs_cmd)
-  for l in open('%s/validator_minified.js' % out_dir):
-    f.write(l)
-  f.write("""
-      var fs = require('fs');
-      var path = require('path');
-      var http = require('http');
-      var https = require('https');
-      var url = require('url');
-
-      function validateFile(contents, filename) {
-        var results = amp.validator.validateString(contents);
-        var output = amp.validator.renderValidationResult(results, filename);
-
-        if (output[0] === 'PASS') {
-          for (var i = 0; i < output.length; ++i) {
-            console.info(output[i]);
-          }
-          process.exit(0);
-        } else {  // FAIL
-          for (var i = 0; i < output.length; ++i) {
-            console.error(output[i]);
-          }
-          process.exit(1);
-        }
-      }
-
-      function main() {
-        if (process.argv.length < 3) {
-          console.error('usage: validate <file.html>|<url>|-');
-          process.exit(1)
-        }
-        var args = process.argv.slice(2);
-        var full_path = args[0];
-
-        var callback = function(response) {
-          var chunks = [];
-
-          response.on('data', function (chunk) {
-            chunks.push(chunk);
-          });
-
-          response.on('end', function () {
-            validateFile(chunks.join(''), full_path);
-          });
-
-        };
-
-        if (full_path === '-') {
-          callback(process.stdin);
-          process.stdin.resume();
-        } else {
-
-          if (full_path.indexOf('http://') === 0 ||
-              full_path.indexOf('https://') === 0) {
-
-            var clientModule = http;
-            if (full_path.indexOf('https://') === 0) {
-              clientModule = https;
-            }
-            clientModule.request(url.parse(full_path), callback).end();
-
-          } else {
-            var filename = path.basename(full_path);
-            var contents = fs.readFileSync(full_path, 'utf8');
-            validateFile(contents, filename);
-          }
-
-        }
-
-      }
-
-      if (require.main === module) {
-        main();
-      }
-      """)
-  os.chmod('%s/validate' % out_dir, 0750)
-  logging.info('... done')
-
-
 def RunSmokeTest(out_dir, nodejs_cmd):
   """Runs a smoke test (minimum valid AMP and empty html file).
 
@@ -342,25 +277,32 @@ def RunSmokeTest(out_dir, nodejs_cmd):
     nodejs_cmd: the command for calling Node.js
   """
   logging.info('entering ...')
-  # Run dist/validate on the minimum valid amp and observe that it passes.
-  p = subprocess.Popen([nodejs_cmd, '%s/validate' % out_dir,
-                        'testdata/feature_tests/minimum_valid_amp.html'],
-                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  # Run index.js on the minimum valid amp and observe that it passes.
+  p = subprocess.Popen(
+      [nodejs_cmd, 'index.js', '--validator_js',
+       '%s/validator_minified.js' % out_dir,
+       'testdata/feature_tests/minimum_valid_amp.html'],
+      stdout=subprocess.PIPE,
+      stderr=subprocess.PIPE)
   (stdout, stderr) = p.communicate()
-  if ('PASS\n', '', p.returncode) != (stdout, stderr, 0):
-    Die('Smoke test failed. returncode=%d stdout="%s" stderr="%s"' % (
-        p.returncode, stdout, stderr))
+  if ('testdata/feature_tests/minimum_valid_amp.html: PASS\n', '',
+      p.returncode) != (stdout, stderr, 0):
+    Die('Smoke test failed. returncode=%d stdout="%s" stderr="%s"' %
+        (p.returncode, stdout, stderr))
 
-  # Run dist/validate on an empty file and observe that it fails.
-  open('%s/empty.html' % out_dir, 'w').close()
-  p = subprocess.Popen([nodejs_cmd, '%s/validate' % out_dir, '%s/empty.html' %
-                        out_dir],
-                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  # Run index.js on an empty file and observe that it fails.
+  p = subprocess.Popen(
+      [nodejs_cmd, 'index.js', '--validator_js',
+       '%s/validator_minified.js' % out_dir,
+       'testdata/feature_tests/empty.html'],
+      stdout=subprocess.PIPE,
+      stderr=subprocess.PIPE)
   (stdout, stderr) = p.communicate()
   if p.returncode != 1:
     Die('smoke test failed. Expected p.returncode==1, saw: %s' % p.returncode)
-  if not stderr.startswith('FAIL\nempty.html:1:0 The mandatory tag \'html'):
-    Die('smoke test failed; stderr was: "%s"' % stdout)
+  if not stderr.startswith('testdata/feature_tests/empty.html:1:0 '
+                           'The mandatory tag \'html'):
+    Die('smoke test failed; stderr was: "%s"' % stderr)
   logging.info('... done')
 
 
@@ -377,10 +319,9 @@ def CompileValidatorTestMinified(out_dir):
 
 def CompileHtmlparserTestMinified(out_dir):
   logging.info('entering ...')
-  CompileWithClosure(
-      js_files=['htmlparser.js', 'htmlparser_test.js'],
-      closure_entry_points=['amp.htmlparser.HtmlParserTest'],
-      output_file='%s/htmlparser_test_minified.js' % out_dir)
+  CompileWithClosure(js_files=['htmlparser.js', 'htmlparser_test.js'],
+                     closure_entry_points=['amp.htmlparser.HtmlParserTest'],
+                     output_file='%s/htmlparser_test_minified.js' % out_dir)
   logging.info('... success')
 
 
@@ -409,13 +350,18 @@ def GenerateTestRunner(out_dir):
   """Generates a test runner: a nodejs script that runs our minified tests."""
   logging.info('entering ...')
   f = open('%s/test_runner' % out_dir, 'w')
+  extensions_dir = 'extensions'
+  # In the Github project, the extensions are located in a sibling directory
+  # to the validator rather than a child directory.
+  if not os.path.isdir(extensions_dir):
+    extensions_dir = '../extensions'
   f.write("""#!/usr/bin/nodejs
              global.assert = require('assert');
              global.fs = require('fs');
              global.path = require('path');
              var JasmineRunner = require('jasmine');
              var jasmine = new JasmineRunner();
-             process.env.TESTDATA_DIRS = 'testdata'
+             process.env.TESTDATA_ROOTS = 'testdata:%s'
              require('./validator_test_minified');
              require('./htmlparser_test_minified');
              require('./parse-css_test_minified');
@@ -424,7 +370,7 @@ def GenerateTestRunner(out_dir):
                  process.exit(passed ? 0 : 1);
              });
              jasmine.execute();
-          """)
+          """ % extensions_dir)
   os.chmod('%s/test_runner' % out_dir, 0750)
   logging.info('... success')
 
@@ -443,11 +389,12 @@ def Main():
   CheckPrereqs()
   InstallNodeDependencies()
   SetupOutDir(out_dir='dist')
+  GenValidatorProtoascii(out_dir='dist')
   GenValidatorPb2Py(out_dir='dist')
+  GenValidatorProtoascii(out_dir='dist')
   GenValidatorGeneratedJs(out_dir='dist')
   GenValidatorGeneratedMd(out_dir='dist')
   CompileValidatorMinified(out_dir='dist')
-  GenerateValidateBin(out_dir='dist', nodejs_cmd=nodejs_cmd)
   RunSmokeTest(out_dir='dist', nodejs_cmd=nodejs_cmd)
   CompileValidatorTestMinified(out_dir='dist')
   CompileHtmlparserTestMinified(out_dir='dist')
@@ -455,6 +402,7 @@ def Main():
   CompileParseSrcsetTestMinified(out_dir='dist')
   GenerateTestRunner(out_dir='dist')
   RunTests(out_dir='dist', nodejs_cmd=nodejs_cmd)
+
 
 if __name__ == '__main__':
   Main()

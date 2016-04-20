@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 The AMP HTML Authors. All Rights Reserved.
+ * Copyright 2016 The AMP HTML Authors. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,16 +29,27 @@ export const adPrefetch = {
   a9: 'https://c.amazon-adsystem.com/aax2/assoc.js',
   adblade: 'https://web.adblade.com/js/ads/async/show.js',
   adsense: 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js',
+  aduptech: 'https://s.d.adup-tech.com/jsapi',
   criteo: 'https://static.criteo.net/js/ld/publishertag.js',
   dotandads: 'https://amp.ad.dotandad.com/dotandadsAmp.js',
   industrybrains: 'https://web.industrybrains.com/js/ads/async/show.js',
   mediaimpact: 'https://ec-ns.sascdn.com/diff/251/divscripte/amp.js',
   openx: 'https://www.googletagservices.com/tag/js/gpt.js',
   smartadserver: 'https://ec-ns.sascdn.com/diff/js/smart.js',
+  sovrn: 'https://ap.lijit.com/www/sovrn_amp/sovrn_ads.js',
   yieldmo: 'https://static.yieldmo.com/ym.amp1.js',
   revcontent: 'https://labs-cdn.revcontent.com/build/amphtml/revcontent.amp.min.js',
   teads: 'https://cdn.teads.tv/media/format/v3/teads-format.min.js',
   imobile: 'https://spamp.i-mobile.co.jp/script/amp.js',
+  pubmatic: 'https://ads.pubmatic.com/AdServer/js/amp.js',
+  sortable: 'https://www.googletagservices.com/tag/js/gpt.js',
+  gmossp: 'https://cdn.gmossp-sp.jp/ads/amp.js',
+  'weborama-display': [
+    'https://cstatic.weborama.fr/js/advertiserv2/adperf_launch_1.0.0_scrambled.js',
+    'https://cstatic.weborama.fr/js/advertiserv2/adperf_core_1.0.0_scrambled.js',
+  ],
+  yieldbot: 'https://cdn.yldbt.com/js/yieldbot.intent.js',
+  adstir: 'https://js.ad-stir.com/js/adstir_async.js',
 };
 
 /**
@@ -60,6 +71,7 @@ export const adPreconnect = {
   adform: 'https://track.adform.net',
   adreactor: 'https://adserver.adreactor.com',
   adsense: 'https://googleads.g.doubleclick.net',
+  aduptech: 'https://s.d.adup-tech.com',
   taboola: [
     'https://cdn.taboola.com',
     'https://trc.taboola.com',
@@ -106,10 +118,19 @@ export const adPreconnect = {
     'https://ads.rubiconproject.com',
     'https://optimized-by.rubiconproject.com',
   ],
+  sortable: [
+    'https://tags-cdn.deployads.com',
+    'https://partner.googleadservices.com',
+    'https://securepubads.g.doubleclick.net',
+    'https://tpc.googlesyndication.com',
+  ],
   imobile: 'https://spad.i-mobile.co.jp',
   webediads: [
     'https://eu1.wbdds.com',
   ],
+  gmossp: 'https://cdn.gmossp-sp.jp',
+  yieldbot: 'https://i.yldbt.com',
+  adstir: 'https://ad.ad-stir.com',
 };
 
 /**

@@ -27,7 +27,15 @@ limitations under the License.
   </tr>
   <tr>
     <td width="40%"><strong>Required Script</strong></td>
-    <td><code>&lt;script async custom-element="amp-user-notification" src="https://cdn.ampproject.org/v0/amp-user-notification-0.1.js">&lt;/script></code></td>
+    <td>
+      <div>
+        <code>&lt;script async custom-element="amp-user-notification" src="https://cdn.ampproject.org/v0/amp-user-notification-0.1.js">&lt;/script></code>
+      </div>
+      <div>
+        <code>&lt;script async custom-element="amp-analytics" src="https://cdn.ampproject.org/v0/amp-analytics-0.1.js">&lt;/script></code>
+      </div>
+      <small>Notice that both "amp-user-notification" and "amp-analytics" scripts are required.</small>
+    </td>
   </tr>
   <tr>
     <td width="40%"><strong>Examples</strong></td>
@@ -245,7 +253,7 @@ Optionally one can delay generation of Client IDs used for analytics and similar
 ## Validation errors
 
 The following lists validation errors specific to the `amp-user-notification` tag
-(see also `amp-user-notification` in the [AMP validator specification](https://github.com/ampproject/amphtml/blob/master/validator/validator.protoascii)):
+(see also `amp-user-notification` in the [AMP validator specification](https://github.com/ampproject/amphtml/blob/master/extensions/amp-user-notification/0.1/validator-amp-user-notification.protoascii)):
 
 <table>
   <tr>

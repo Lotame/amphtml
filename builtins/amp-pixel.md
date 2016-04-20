@@ -59,7 +59,7 @@ may make a request to something like `https://foo.com/pixel?0.8390278471201` whe
 ## Validation errors
 
 The following lists validation errors specific to the `amp-pixel` tag
-(see also `amp-pixel` in the [AMP validator specification](https://github.com/ampproject/amphtml/blob/master/validator/validator.protoascii)):
+(see also `amp-pixel` in the [AMP validator specification](https://github.com/ampproject/amphtml/blob/master/validator/validator-main.protoascii)):
 
 <table>
   <tr>
@@ -72,7 +72,7 @@ The following lists validation errors specific to the `amp-pixel` tag
   </tr>
   <tr>
     <td class="col-fourty"><a href="https://www.ampproject.org/docs/reference/validation_errors.html#missing-url">Missing URL for attribute 'example1' in tag 'example2'.</a></td>
-    <td>Error thrown when <code>src</code> attribute is missing it's URL.</td>
+    <td>Error thrown when <code>src</code> attribute is missing its URL.</td>
   </tr>
   <tr>
   <td class="col-fourty"><a href="https://www.ampproject.org/docs/reference/validation_errors.html#invalid-url">Malformed URL 'example3' for attribute 'example1' in tag 'example2'.</a></td>

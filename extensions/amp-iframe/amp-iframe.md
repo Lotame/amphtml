@@ -179,7 +179,7 @@ Iframes are identified as tracking/analytics iframes if they appear to serve no 
 ## Validation errors
 
 The following lists validation errors specific to the `amp-iframe` tag
-(see also `amp-iframe` in the [AMP validator specification](https://github.com/ampproject/amphtml/blob/master/validator/validator.protoascii)):
+(see also `amp-iframe` in the [AMP validator specification](https://github.com/ampproject/amphtml/blob/master/extensions/amp-iframe/0.1/validator-amp-iframe.protoascii)):
 
 <table>
   <tr>
@@ -196,7 +196,7 @@ The following lists validation errors specific to the `amp-iframe` tag
   </tr>
     <tr>
     <td width="40%"><a href="https://www.ampproject.org/docs/reference/validation_errors.html#missing-url">Missing URL for attribute 'example1' in tag 'example2'.</a></td>
-    <td>Error thrown when <code>src</code> or <code>srcdoc</code> is missing it's URL.</td>
+    <td>Error thrown when <code>src</code> or <code>srcdoc</code> is missing its URL.</td>
   </tr>
   <tr>
     <td width="40%"><a href="https://www.ampproject.org/docs/reference/validation_errors.html#invalid-url">Malformed URL 'example3' for attribute 'example1' in tag 'example2'.</a></td>
