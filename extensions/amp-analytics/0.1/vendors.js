@@ -294,7 +294,7 @@ export const ANALYTICS_CONFIG = {
 
   'lotame': {
     'requests': {
-      'pageview': 'https://bcp.crwdcntrl.net/5/c=${account}/pv=y'
+      'pageview': 'https://bcp.crwdcntrl.net/amp?c=${account}&pv=y'
     },
     'triggers': {
       'track pageview': {
