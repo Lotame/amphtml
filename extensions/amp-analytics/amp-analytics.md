@@ -107,6 +107,12 @@ Type attribute value: `chartbeat`
 
 Adds support for Chartbeat. More details for adding Chartbeat support can be found at [support.chartbeat.com](http://support.chartbeat.com/docs/integrations.html#amp).
 
+### ColAnalytics
+
+Type attribute value: `colanalytics`
+
+Adds support for ColAnalytics. Additionally, need the value for `id`.
+
 ### comScore
 
 Type attribute value: `comscore`
@@ -170,6 +176,12 @@ Type attribute value: `quantcast`
 
 Adds support for Quantcast Measurement. More details for adding Quantcast Measurement can be found at [quantcast.com](https://www.quantcast.com/help/guides/)
 
+### SOASTA mPulse
+
+Type attribute value: `mpulse`
+
+Adds support for [SOASTA mPulse](https://www.soasta.com/mPulse). Configuration details can be found at [docs.soasta.com](http://docs.soasta.com/).
+
 ### SimpleReach
 
 Type attribute value: `simplereach`
@@ -209,7 +221,7 @@ the `type` attribute.
 
 If configuration data from more than one of these sources is used, the configuration objects (vars, requests and triggers) will
 be merged together such that **(i) remote configuration takes precedence over inline configuration and (ii) inline configuration
-takes precendence over vendor configuration**.
+takes precedence over vendor configuration**.
 
 The `<amp-analytics>` configuration object uses the following format:
 

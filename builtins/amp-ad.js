@@ -59,17 +59,9 @@ export function installAd(win) {
 
       // Ad opts into lazier loading strategy where we only load ads that are
       // at closer than 1.25 viewports away.
-      // TODO(jridgewell): Can this be moved to the new number based
-      // renderOutsideViewport?
       if (this.element.getAttribute('data-loading-strategy') ==
           'prefer-viewability-over-views') {
-        const box = this.getIntersectionElementLayoutBox();
-        const viewportBox = this.getViewport().getRect();
-        const distanceFromViewport = box.top - viewportBox.bottom;
-        if (distanceFromViewport <= 1.25 * (viewportBox.height)) {
-          return true;
-        }
-        return false;
+        return 1.25;
       }
 
       // Otherwise the ad is good to go.
@@ -223,10 +215,10 @@ export function installAd(win) {
     /** @override */
     layoutCallback() {
       if (!this.iframe_) {
-        loadingAdsCount++;
         user.assert(!this.isInFixedContainer_,
             '<amp-ad> is not allowed to be placed in elements with ' +
             'position:fixed: %s', this.element);
+        loadingAdsCount++;
         timer.delay(() => {
           // Unfortunately we don't really have a good way to measure how long it
           // takes to load an ad, so we'll just pretend it takes 1 second for
